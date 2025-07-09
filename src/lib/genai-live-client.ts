@@ -66,21 +66,14 @@ export class GenAILiveClient extends EventEmitter<LiveClientEventTypes> {
     this.onmessage = this.onmessage.bind(this);
   }
 
-  protected log(type: string, message: StreamingLog["message"]) {
+  protected log(message: StreamingLog["message"]) {
     const log: StreamingLog = {
-      type,
-      message,
+            message,
     };
     this.emit("log", log);
   }
 
-  protected logger(type: string, message: StreamingLog["message"]) {
-    const log: StreamingLog = {
-      type,
-      message,
-    };
-    this.emit("log", log);
-  }
+  
   async connect(model: string, config: LiveConnectConfig): Promise<boolean> {
     if (this._status === "connected" || this._status === "connecting") {
       return false;
@@ -121,23 +114,22 @@ export class GenAILiveClient extends EventEmitter<LiveClientEventTypes> {
     this._session = null;
     this._status = "disconnected";
 
-    this.log("client.close", `Disconnected`);
+    this.log(`Disconnected`);
     return true;
   }
 
   protected onopen() {
-    this.log("client.open", "Connected");
+    this.log( "Connected");
     this.emit("open");
   }
 
   protected onerror(e: ErrorEvent) {
-    this.log("server.error", e.message);
+    this.log( e.message);
     this.emit("error", e);
   }
 
   protected onclose(e: CloseEvent) {
     this.log(
-      `server.close`,
       `disconnected ${e.reason ? `with reason: ${e.reason}` : ``}`
     );
     this.emit("close", e);
@@ -145,17 +137,17 @@ export class GenAILiveClient extends EventEmitter<LiveClientEventTypes> {
 
   protected async onmessage(message: LiveServerMessage) {
     if (message.setupComplete) {
-      this.log("server.send", "setupComplete");
+      this.log("setupComplete");
       this.emit("setupcomplete");
       return;
     }
     if (message.toolCall) {
-      this.log("server.toolCall", message);
+      this.log(message);
       this.emit("toolcall", message.toolCall);
       return;
     }
     if (message.toolCallCancellation) {
-      this.log("server.toolCallCancellation", message);
+      this.log( message);
       this.emit("toolcallcancellation", message.toolCallCancellation);
       return;
     }
@@ -165,19 +157,23 @@ export class GenAILiveClient extends EventEmitter<LiveClientEventTypes> {
     if (message.serverContent) {
       const { serverContent } = message;
       if ("interrupted" in serverContent) {
-        this.log("server.content", "interrupted");
+        this.log("interrupted");
         this.emit("interrupted");
         return;
       }
       if ("turnComplete" in serverContent) {
-        this.log("server.content", "turnComplete");
+        this.log( "turnComplete");
         this.emit("turncomplete");
       }
 
       console.log("serverContent output ", serverContent)
+      if ('inputTranscription' in serverContent){
+        let audioTrans = serverContent.inputTranscription?.text
+        this.log(`(${audioTrans})`); 
+      }
       if ("outputTranscription" in serverContent) {
         let audioTrans = serverContent.outputTranscription?.text
-        this.log(`-----`, `(${audioTrans})`);
+        this.log(`(${audioTrans})`);
       }
 
       if ("modelTurn" in serverContent) {
@@ -204,11 +200,8 @@ export class GenAILiveClient extends EventEmitter<LiveClientEventTypes> {
         if (!otherParts.length) {
           return;
         }
-
         parts = otherParts;
-
         const content: { modelTurn: Content } = { modelTurn: { parts } };
-
         this.emit("content", content);
       }
     } else {
@@ -242,7 +235,7 @@ export class GenAILiveClient extends EventEmitter<LiveClientEventTypes> {
           : hasVideo
             ? "video"
             : "unknown";
-    this.log(`client.realtimeInput`, message);
+    this.log( message);
   }
 
   /**
@@ -256,7 +249,7 @@ export class GenAILiveClient extends EventEmitter<LiveClientEventTypes> {
       this.session?.sendToolResponse({
         functionResponses: toolResponse.functionResponses,
       });
-      this.log(`client.toolResponse`, toolResponse);
+      this.log(toolResponse);
     }
   }
 
@@ -265,7 +258,7 @@ export class GenAILiveClient extends EventEmitter<LiveClientEventTypes> {
    */
   send(parts: Part | Part[], turnComplete: boolean = true) {
     this.session?.sendClientContent({ turns: parts, turnComplete });
-    this.log(`client.send`, {
+    this.log( {
       turns: Array.isArray(parts) ? parts : [parts],
       turnComplete,
     });

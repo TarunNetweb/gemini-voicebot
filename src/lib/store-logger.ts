@@ -1,6 +1,5 @@
 import { create } from "zustand";
 import { StreamingLog } from "../types";
-import { mockLogs } from "../components/logger/mock-logs";
 
 interface StoreLoggerState {
   maxLogs: number;
@@ -10,12 +9,12 @@ interface StoreLoggerState {
 }
 
 export const useLoggerStore = create<StoreLoggerState>((set, get) => ({
-  maxLogs: 100,
+  maxLogs: 1000,
   logs: [], 
-  log: ({  type, message }: StreamingLog) => {
+  log: ({  message }: StreamingLog) => {
     set((state) => {
       const prevLog = state.logs.at(-1);
-      if (prevLog && prevLog.type === type && prevLog.message === message) {
+      if (prevLog && prevLog.message === message) {
         return {
           logs: [
             ...state.logs.slice(0, -1),

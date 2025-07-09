@@ -9,7 +9,6 @@ import {
 export type LiveClientOptions = GoogleGenAIOptions & { apiKey: string };
 
 export type StreamingLog = {
-  type: string;
   message:
     | string
     | ClientContentLog

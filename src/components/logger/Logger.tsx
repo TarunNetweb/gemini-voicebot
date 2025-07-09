@@ -30,18 +30,24 @@ const LogEntry = memo(
     }: {
       message: StreamingLog["message"];
     }) => ReactNode;
-  }): JSX.Element => (
+  }): JSX.Element => {
+
+    const isAudio = log.message === "audio";
+
+    return (
       <span className="message">
-        <MessageComponent message={log.message} />
-      </span>   
-  )
+        {!isAudio && <MessageComponent message={log.message} />}
+      </span>
+    );
+  }
 );
 
 const PlainTextMessage = ({
   message,
 }: {
   message: StreamingLog["message"];
-}) => <span>{message as string}</span>;
+}) => <span>{
+  message as string} </span>;
 
 type Message = { message: StreamingLog["message"] };
 
