@@ -15,6 +15,7 @@ function AltairComponent() {
     setConfig({
       responseModalities: [Modality.AUDIO],
       outputAudioTranscription: {},
+      inputAudioTranscription: {},
       speechConfig: {
         voiceConfig: { prebuiltVoiceConfig: { voiceName: "Aoede" } },
       },

@@ -9,9 +9,7 @@ import {
 export type LiveClientOptions = GoogleGenAIOptions & { apiKey: string };
 
 export type StreamingLog = {
-  date: Date;
   type: string;
-  count?: number;
   message:
     | string
     | ClientContentLog

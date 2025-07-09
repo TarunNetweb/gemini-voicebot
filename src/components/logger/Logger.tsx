@@ -19,8 +19,6 @@ import {
   Part,
 } from "@google/genai";
 
-const formatTime = (d: Date) => d.toLocaleTimeString().slice(0, -3);
-
 const LogEntry = memo(
   ({
     log,
@@ -33,23 +31,9 @@ const LogEntry = memo(
       message: StreamingLog["message"];
     }) => ReactNode;
   }): JSX.Element => (
-    <li
-      className={cn(
-        `plain-log`,
-        `source-${log.type.slice(0, log.type.indexOf("."))}`,
-        {
-          receive: log.type.includes("receive"),
-          send: log.type.includes("send"),
-        }
-      )}
-    >
-      <span className="timestamp">{formatTime(log.date)}</span>
-      <span className="source">{log.type}</span>
       <span className="message">
         <MessageComponent message={log.message} />
-      </span>
-      {log.count && <span className="count">{log.count}</span>}
-    </li>
+      </span>   
   )
 );
 

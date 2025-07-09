@@ -1,19 +1,3 @@
-/**
- * Copyright 2024 Google LLC
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
-
 import {
   Content,
   GoogleGenAI,
@@ -22,7 +6,6 @@ import {
   LiveConnectConfig,
   LiveServerContent,
   LiveServerMessage,
-  // LiveOutputAudioTranscription,
   LiveServerToolCall,
   LiveServerToolCallCancellation,
   Part,
@@ -34,44 +17,21 @@ import { difference } from "lodash";
 import { LiveClientOptions, StreamingLog } from "../types";
 import { base64ToArrayBuffer } from "./utils";
 
-/**
- * Event types that can be emitted by the MultimodalLiveClient.
- * Each event corresponds to a specific message from GenAI or client state change.
- */
 export interface LiveClientEventTypes {
-  // Emitted when audio data is received
   audio: (data: ArrayBuffer) => void;
-  // Emitted when the connection closes
   close: (event: CloseEvent) => void;
-  // Emitted when content is received from the server
   content: (data: LiveServerContent) => void;
-  // 
-  //  udioTranscription: (transcription: LiveOutputAudioTranscription) => void;
-  // Emitted when an error occurs
   error: (error: ErrorEvent) => void;
-  // Emitted when the server interrupts the current generation
   interrupted: () => void;
-  // Emitted for logging events
   log: (log: StreamingLog) => void;
-  // Emitted when the connection opens
   open: () => void;
-  // Emitted when the initial setup is complete
   setupcomplete: () => void;
-  // Emitted when a tool call is received
   toolcall: (toolCall: LiveServerToolCall) => void;
-  // Emitted when a tool call is cancelled
   toolcallcancellation: (
     toolcallCancellation: LiveServerToolCallCancellation
   ) => void;
-  // Emitted when the current turn is complete
   turncomplete: () => void;
 }
-
-/**
- * A event-emitting class that manages the connection to the websocket and emits
- * events to the rest of the application.
- * If you dont want to use react you can still use this.
- */
 export class GenAILiveClient extends EventEmitter<LiveClientEventTypes> {
   protected client: GoogleGenAI;
 
@@ -108,7 +68,6 @@ export class GenAILiveClient extends EventEmitter<LiveClientEventTypes> {
 
   protected log(type: string, message: StreamingLog["message"]) {
     const log: StreamingLog = {
-      date: new Date(),
       type,
       message,
     };
@@ -117,7 +76,6 @@ export class GenAILiveClient extends EventEmitter<LiveClientEventTypes> {
 
   protected logger(type: string, message: StreamingLog["message"]) {
     const log: StreamingLog = {
-      date: new Date(),
       type,
       message,
     };
@@ -219,7 +177,7 @@ export class GenAILiveClient extends EventEmitter<LiveClientEventTypes> {
       console.log("serverContent output ", serverContent)
       if ("outputTranscription" in serverContent) {
         let audioTrans = serverContent.outputTranscription?.text
-        this.log(`server.audio`, `audio transcription (${audioTrans})`);
+        this.log(`-----`, `(${audioTrans})`);
       }
 
       if ("modelTurn" in serverContent) {
@@ -228,15 +186,12 @@ export class GenAILiveClient extends EventEmitter<LiveClientEventTypes> {
         if ("outputTranscription" in serverContent) {
           console.log("cdfdvfdb ", serverContent)
         }
-        // when its audio that is returned for modelTurn
         const audioParts = parts.filter(
           (p) => p.inlineData && p.inlineData.mimeType?.startsWith("audio/pcm")
         );
         const base64s = audioParts.map((p) => p.inlineData?.data);
 
-        // strip the audio parts out of the modelTurn
         const otherParts = difference(parts, audioParts);
-        // console.log("otherParts", otherParts);
 
         base64s.forEach((b64) => {
           if (b64) {
@@ -244,7 +199,6 @@ export class GenAILiveClient extends EventEmitter<LiveClientEventTypes> {
             const data = base64ToArrayBuffer(b64);
             this.emit("audio", data);
 
-            this.log(`server.audio`, `buffer (${data.byteLength})`);
           }
         });
         if (!otherParts.length) {
@@ -256,7 +210,6 @@ export class GenAILiveClient extends EventEmitter<LiveClientEventTypes> {
         const content: { modelTurn: Content } = { modelTurn: { parts } };
 
         this.emit("content", content);
-        this.log(`server.content`, message);
       }
     } else {
       console.log("received unmatched message", message);
