@@ -18,13 +18,10 @@ export default function SidePanel() {
   const loggerRef = useRef<HTMLDivElement>(null);
   const loggerLastHeightRef = useRef<number>(-1);
   const { log, logs } = useLoggerStore();
-
-  const [textInput, setTextInput] = useState("");
   const [selectedOption, setSelectedOption] = useState<{
     value: string;
     label: string;
   } | null>(null);
-  const inputRef = useRef<HTMLTextAreaElement>(null);
 
   useEffect(() => {
     if (loggerRef.current) {

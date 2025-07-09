@@ -66,8 +66,9 @@ export class GenAILiveClient extends EventEmitter<LiveClientEventTypes> {
     this.onmessage = this.onmessage.bind(this);
   }
 
-  protected log(message: StreamingLog["message"]) {
+  protected log(isInput: boolean,message: StreamingLog["message"]) {
     const log: StreamingLog = {
+      isInput,
             message,
     };
     this.emit("log", log);
@@ -114,22 +115,22 @@ export class GenAILiveClient extends EventEmitter<LiveClientEventTypes> {
     this._session = null;
     this._status = "disconnected";
 
-    this.log(`Disconnected`);
+    this.log(true,`Disconnected`);
     return true;
   }
 
   protected onopen() {
-    this.log( "Connected");
+    this.log(true, "Connected");
     this.emit("open");
   }
 
   protected onerror(e: ErrorEvent) {
-    this.log( e.message);
+    this.log(true, e.message);
     this.emit("error", e);
   }
 
   protected onclose(e: CloseEvent) {
-    this.log(
+    this.log(true,
       `disconnected ${e.reason ? `with reason: ${e.reason}` : ``}`
     );
     this.emit("close", e);
@@ -137,17 +138,17 @@ export class GenAILiveClient extends EventEmitter<LiveClientEventTypes> {
 
   protected async onmessage(message: LiveServerMessage) {
     if (message.setupComplete) {
-      this.log("setupComplete");
+      this.log(true,"setupComplete");
       this.emit("setupcomplete");
       return;
     }
     if (message.toolCall) {
-      this.log(message);
+      this.log(true,message);
       this.emit("toolcall", message.toolCall);
       return;
     }
     if (message.toolCallCancellation) {
-      this.log( message);
+      this.log(true, message);
       this.emit("toolcallcancellation", message.toolCallCancellation);
       return;
     }
@@ -157,23 +158,24 @@ export class GenAILiveClient extends EventEmitter<LiveClientEventTypes> {
     if (message.serverContent) {
       const { serverContent } = message;
       if ("interrupted" in serverContent) {
-        this.log("interrupted");
+        this.log(true,"interrupted");
         this.emit("interrupted");
         return;
       }
       if ("turnComplete" in serverContent) {
-        this.log( "turnComplete");
+        this.log(true, "turnComplete");
         this.emit("turncomplete");
       }
 
       console.log("serverContent output ", serverContent)
       if ('inputTranscription' in serverContent){
         let audioTrans = serverContent.inputTranscription?.text
-        this.log(`(${audioTrans})`); 
+        this.log(true,`(${audioTrans})`); 
+        // input_or_output
       }
       if ("outputTranscription" in serverContent) {
         let audioTrans = serverContent.outputTranscription?.text
-        this.log(`(${audioTrans})`);
+        this.log(false,`(${audioTrans})`);
       }
 
       if ("modelTurn" in serverContent) {
@@ -220,22 +222,17 @@ export class GenAILiveClient extends EventEmitter<LiveClientEventTypes> {
       if (ch.mimeType.includes("audio")) {
         hasAudio = true;
       }
-      if (ch.mimeType.includes("image")) {
-        hasVideo = true;
-      }
-      if (hasAudio && hasVideo) {
-        break;
-      }
+     
     }
     const message =
-      hasAudio && hasVideo
-        ? "audio + video"
+      hasAudio 
+        ? "audio "
         : hasAudio
           ? "audio"
           : hasVideo
             ? "video"
             : "unknown";
-    this.log( message);
+    this.log(true, message);
   }
 
   /**
@@ -249,7 +246,7 @@ export class GenAILiveClient extends EventEmitter<LiveClientEventTypes> {
       this.session?.sendToolResponse({
         functionResponses: toolResponse.functionResponses,
       });
-      this.log(toolResponse);
+      this.log(false,toolResponse);
     }
   }
 
@@ -257,8 +254,9 @@ export class GenAILiveClient extends EventEmitter<LiveClientEventTypes> {
    * send normal content parts such as { text }
    */
   send(parts: Part | Part[], turnComplete: boolean = true) {
+    console.log(" sending the parth s")
     this.session?.sendClientContent({ turns: parts, turnComplete });
-    this.log( {
+    this.log(false, {
       turns: Array.isArray(parts) ? parts : [parts],
       turnComplete,
     });

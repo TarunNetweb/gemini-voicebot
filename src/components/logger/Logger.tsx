@@ -19,6 +19,7 @@ import {
   Part,
 } from "@google/genai";
 
+
 const LogEntry = memo(
   ({
     log,
@@ -31,13 +32,22 @@ const LogEntry = memo(
       message: StreamingLog["message"];
     }) => ReactNode;
   }): JSX.Element => {
+    console.log("log", log);
 
-    const isAudio = log.message === "audio";
-
+    const isAudio = log.message === "audio ";
+    const isInput = log.isInput === true;
+    console.log(" is input ", isInput)
     return (
-      <span className="message">
-        {!isAudio && <MessageComponent message={log.message} />}
-      </span>
+      <>
+        {!isAudio && (
+          <span
+          key = {isInput? "true":  "false"}
+          className={isInput ? "message1" : "message"}>
+            <MessageComponent message={log.message} />
+          </span>
+        )}
+
+      </>
     );
   }
 );
